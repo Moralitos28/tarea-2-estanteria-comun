@@ -37,7 +37,8 @@ async function ejecutarBusqueda(texto) {
     renderizarResultados(resultados, libros, estaEnLecturas);
   } catch (error) {
     if (error.name === 'AbortError') return;
-    mostrarEstado(estado, 'error', `No se pudo completar la búsqueda. ${error.message}`);
+    const detalle = error instanceof TypeError ? 'Revise su conexión a internet.' : error.message;
+    mostrarEstado(estado, 'error', `No se pudo completar la búsqueda. ${detalle}`);
   }
 }
 

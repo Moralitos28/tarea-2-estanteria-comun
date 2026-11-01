@@ -1,10 +1,21 @@
-// Formulario de propuesta: validación con la API de validación de restricciones.
+// Formulario de propuesta: validación con la API de validación de restricciones,
+// campos de autor dinámicos y envío asincrónico.
+
+import { enviarPropuesta } from './api.js';
+import { crearAlerta } from './render.js';
+
+const MIN_AUTORES = 1;
+const MAX_AUTORES = 5;
 
 const formulario = document.querySelector('#form-propuesta');
 const contenedorAutores = document.querySelector('#autores');
 const plantillaAutor = document.querySelector('#plantilla-autor');
 const campoAnio = document.querySelector('#anio');
 const campoFecha = document.querySelector('#fecha');
+const botonAgregarAutor = document.querySelector('#agregar-autor');
+const contadorAutores = document.querySelector('#contador-autores');
+const botonEnviar = document.querySelector('#enviar-propuesta');
+const alerta = document.querySelector('#alerta-propuesta');
 
 // Nombres legibles de cada campo para los mensajes de error.
 const NOMBRES = {
@@ -44,7 +55,9 @@ const REGLAS_PERSONALIZADAS = {
 // asignados desde código. Esta regla lo verifica siempre.
 function reglaLongitudMinima(campo) {
   const { minLength, value } = campo;
-  if (minLength <= 0 || value === '' || value.length >= minLength) return '';
+
+  // Los <select> no tienen minLength (es undefined), así que la regla no aplica.
+  if (!(minLength > 0) || value === '' || value.length >= minLength) return '';
 
   const { texto } = NOMBRES[campo.name] ?? { texto: 'Este campo' };
   return `${texto} debe tener al menos ${minLength} caracteres (tiene ${value.length}).`;
@@ -74,7 +87,7 @@ function contenedorMensaje(campo) {
 }
 
 // Valida un campo, muestra su mensaje junto a él y devuelve si es válido.
-export function validarCampo(campo) {
+function validarCampo(campo) {
   const regla = REGLAS_PERSONALIZADAS[campo.name];
   campo.setCustomValidity((regla ? regla(campo) : '') || reglaLongitudMinima(campo));
 
@@ -99,13 +112,13 @@ function camposDelFormulario() {
 }
 
 // Valida todos los campos y lleva el foco al primero con error.
-export function validarFormulario() {
+function validarFormulario() {
   const invalidos = camposDelFormulario().filter((campo) => !validarCampo(campo));
   invalidos[0]?.focus();
   return invalidos.length === 0;
 }
 
-export function limpiarValidacion() {
+function limpiarValidacion() {
   for (const campo of camposDelFormulario()) {
     campo.classList.remove('is-invalid', 'is-valid');
     campo.removeAttribute('aria-invalid');
@@ -114,7 +127,23 @@ export function limpiarValidacion() {
   }
 }
 
-export function crearCampoAutor() {
+function camposAutor() {
+  return [...contenedorAutores.querySelectorAll('input')];
+}
+
+// Habilita o deshabilita los botones según los límites y actualiza el contador.
+function actualizarControlesAutores() {
+  const cantidad = camposAutor().length;
+
+  botonAgregarAutor.disabled = cantidad >= MAX_AUTORES;
+  for (const boton of contenedorAutores.querySelectorAll('[data-accion="quitar-autor"]')) {
+    boton.disabled = cantidad <= MIN_AUTORES;
+  }
+
+  contadorAutores.textContent = `${cantidad} de ${MAX_AUTORES} autores (mínimo ${MIN_AUTORES}).`;
+}
+
+function crearCampoAutor() {
   const fragmento = plantillaAutor.content.cloneNode(true);
   const campo = fragmento.querySelector('input');
   const mensaje = fragmento.querySelector('.invalid-feedback');
@@ -127,6 +156,81 @@ export function crearCampoAutor() {
 
   contenedorAutores.append(fragmento);
   return campo;
+}
+
+function agregarAutor() {
+  if (camposAutor().length >= MAX_AUTORES) return;
+
+  const campo = crearCampoAutor();
+  actualizarControlesAutores();
+  campo.focus();
+}
+
+function quitarAutor(boton) {
+  if (camposAutor().length <= MIN_AUTORES) return;
+
+  const grupo = boton.closest('.campo-autor');
+  const anterior = grupo.previousElementSibling ?? grupo.nextElementSibling;
+  grupo.remove();
+  actualizarControlesAutores();
+  anterior?.querySelector('input')?.focus();
+}
+
+// Reúne los datos del formulario; los autores llegan como un arreglo.
+function datosDelFormulario() {
+  const datos = new FormData(formulario);
+  return {
+    titulo: datos.get('titulo').trim(),
+    autores: datos.getAll('autores').map((autor) => autor.trim()),
+    anio: Number(datos.get('anio')),
+    paginas: Number(datos.get('paginas')),
+    genero: datos.get('genero'),
+    correo: datos.get('correo').trim(),
+    fecha: datos.get('fecha'),
+    motivo: datos.get('motivo').trim(),
+  };
+}
+
+function mostrarAlerta(tipo, titulo, mensaje) {
+  alerta.replaceChildren(crearAlerta(tipo, titulo, mensaje));
+  alerta.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function marcarEnviando(enviando) {
+  botonEnviar.disabled = enviando;
+  botonEnviar.querySelector('.spinner-border').classList.toggle('d-none', !enviando);
+  botonEnviar.querySelector('.texto-boton').textContent = enviando ? 'Enviando…' : 'Enviar propuesta';
+}
+
+// Deja el formulario como al cargar la página: un solo autor y sin marcas de validación.
+function reiniciarFormulario() {
+  formulario.reset();
+  camposAutor().slice(MIN_AUTORES).forEach((campo) => campo.closest('.campo-autor').remove());
+  limpiarValidacion();
+  actualizarControlesAutores();
+}
+
+async function enviar() {
+  if (!validarFormulario()) {
+    mostrarAlerta('warning', 'Revise el formulario.', 'Hay campos con errores; corríjalos antes de enviar.');
+    return;
+  }
+
+  const propuesta = datosDelFormulario();
+  marcarEnviando(true);
+
+  try {
+    const respuesta = await enviarPropuesta(propuesta);
+    mostrarAlerta('success', '¡Propuesta registrada!',
+      `"${propuesta.titulo}" quedó registrada con el número ${respuesta.id}. Gracias por proponer.`);
+    reiniciarFormulario();
+  } catch (error) {
+    // Un fallo de red (sin conexión, CORS) llega como TypeError; un código de error, como Error propio.
+    const detalle = error instanceof TypeError ? 'Revise su conexión a internet.' : error.message;
+    mostrarAlerta('danger', 'No se pudo enviar la propuesta.', `${detalle} Intente de nuevo.`);
+  } finally {
+    marcarEnviando(false);
+  }
 }
 
 function asociarMensajes() {
@@ -150,6 +254,15 @@ export function iniciarFormulario() {
 
   crearCampoAutor();
   asociarMensajes();
+  actualizarControlesAutores();
+
+  botonAgregarAutor.addEventListener('click', agregarAutor);
+
+  // Delegación: una sola escucha para los botones de quitar de todos los autores.
+  contenedorAutores.addEventListener('click', (evento) => {
+    const boton = evento.target.closest('[data-accion="quitar-autor"]');
+    if (boton && contenedorAutores.contains(boton)) quitarAutor(boton);
+  });
 
   // Delegación: los campos se validan al salir de ellos y, una vez tocados, mientras se escribe.
   // Funciona también para los campos de autor que se agregan después.
@@ -168,6 +281,6 @@ export function iniciarFormulario() {
 
   formulario.addEventListener('submit', (evento) => {
     evento.preventDefault();
-    validarFormulario();
+    enviar();
   });
 }

@@ -35,3 +35,20 @@ export async function buscarLibros(texto, { signal } = {}) {
   const datos = await respuesta.json();
   return datos.docs.map(normalizarLibro);
 }
+
+// Servicio de pruebas que simula el registro de la propuesta.
+const URL_PROPUESTAS = 'https://jsonplaceholder.typicode.com/posts';
+
+export async function enviarPropuesta(propuesta) {
+  const respuesta = await fetch(URL_PROPUESTAS, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json; charset=UTF-8' },
+    body: JSON.stringify(propuesta),
+  });
+
+  if (!respuesta.ok) {
+    throw new Error(`El servidor respondió con el código ${respuesta.status}.`);
+  }
+
+  return respuesta.json();
+}

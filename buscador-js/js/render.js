@@ -169,3 +169,18 @@ export function actualizarFilaLectura(fila, lectura, textoSiguiente) {
   const boton = fila.querySelector('[data-accion="cambiar-estado"]');
   boton.textContent = `Marcar ${textoSiguiente}`;
 }
+
+// Alerta de Bootstrap que se puede cerrar.
+export function crearAlerta(tipo, titulo, mensaje) {
+  return crearElemento('div', {
+    clase: `alert alert-${tipo} alert-dismissible fade show`,
+    atributos: { role: 'alert' },
+  }, [
+    crearElemento('strong', { texto: `${titulo} ` }),
+    crearElemento('span', { texto: mensaje }),
+    crearElemento('button', {
+      clase: 'btn-close',
+      atributos: { type: 'button', 'data-bs-dismiss': 'alert', 'aria-label': 'Cerrar' },
+    }),
+  ]);
+}

@@ -87,6 +87,10 @@
         <fieldset class="col-12">
           <legend class="form-label fs-6 mb-2">Autores</legend>
           <div id="autores" class="d-grid gap-2"></div>
+          <div class="d-flex flex-wrap align-items-center gap-2 mt-2">
+            <button type="button" id="agregar-autor" class="btn btn-outline-primary btn-sm">Agregar autor</button>
+            <span id="contador-autores" class="form-text m-0" aria-live="polite"></span>
+          </div>
         </fieldset>
 
         <div class="col-12 col-md-6">
@@ -121,7 +125,10 @@
           <div class="invalid-feedback"></div>
         </div>
         <div class="col-12 d-flex justify-content-end">
-          <button type="submit" class="btn btn-primary">Enviar propuesta</button>
+          <button type="submit" id="enviar-propuesta" class="btn btn-primary">
+            <span class="spinner-border spinner-border-sm me-1 d-none" aria-hidden="true"></span>
+            <span class="texto-boton">Enviar propuesta</span>
+          </button>
         </div>
       </form>
     </section>
