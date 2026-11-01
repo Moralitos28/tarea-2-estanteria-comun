@@ -1,0 +1,17 @@
+{
+  "name": "buscador-js",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Estantería Común — buscador de libros con JavaScript, Bootstrap y Sass",
+  "scripts": {
+    "build:css": "sass --no-source-map --quiet-deps --silence-deprecation=import --load-path=node_modules scss/main.scss css/main.css",
+    "watch:css": "sass --watch --quiet-deps --silence-deprecation=import --load-path=node_modules scss/main.scss css/main.css",
+    "start": "npx serve ."
+  },
+  "dependencies": {
+    "bootstrap": "^5.3.8"
+  },
+  "devDependencies": {
+    "sass": "^1.107.1"
+  }
+}
