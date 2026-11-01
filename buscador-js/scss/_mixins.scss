@@ -1,0 +1,22 @@
+@use "sass:map";
+
+// Media query mobile-first: aplica estilos desde el punto de corte indicado.
+@mixin desde($punto) {
+  $ancho: map.get($grid-breakpoints, $punto);
+
+  @if $ancho == null {
+    @error "Punto de corte desconocido: #{$punto}";
+  }
+
+  @media (min-width: $ancho) {
+    @content;
+  }
+}
+
+// Recorta un texto a un número fijo de líneas.
+@mixin recortar-lineas($lineas) {
+  display: -webkit-box;
+  -webkit-line-clamp: $lineas;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

@@ -1,2 +1,8 @@
 // Punto de entrada de los estilos
+@import "funciones";
+@import "variables";
+
 @import "bootstrap/scss/bootstrap";
+
+@import "mixins";
+@import "componentes";

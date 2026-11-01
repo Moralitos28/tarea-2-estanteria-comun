@@ -1,0 +1,6 @@
+@use "sass:math";
+
+// Convierte píxeles a rem tomando 16px como tamaño base del documento.
+@function rem($px, $base: 16px) {
+  @return math.div($px, $base) * 1rem;
+}

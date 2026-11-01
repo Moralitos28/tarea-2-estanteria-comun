@@ -1,0 +1,49 @@
+// Grilla de resultados: componente propio con CSS Grid y variables CSS.
+// Mobile-first: una columna y se agregan columnas al crecer la pantalla.
+.grilla-libros {
+  --columnas: 1;
+  --espacio: #{$espacio-grilla};
+
+  display: grid;
+  grid-template-columns: repeat(var(--columnas), minmax(0, 1fr));
+  gap: var(--espacio);
+
+  @include desde(sm) {
+    --columnas: 2;
+  }
+
+  @include desde(md) {
+    --columnas: 3;
+  }
+
+  @include desde(lg) {
+    --columnas: 4;
+  }
+}
+
+// Tarjeta de un resultado de búsqueda
+.tarjeta-libro {
+  height: 100%;
+  transition: transform $duracion-transicion ease, box-shadow $duracion-transicion ease;
+
+  &:hover {
+    transform: translateY(rem(-4px));
+    box-shadow: $box-shadow;
+  }
+
+  &__portada {
+    aspect-ratio: 2 / 3;
+    object-fit: cover;
+    background-color: shade-color($body-bg, 8%);
+  }
+
+  &__titulo {
+    font-size: 1.05rem;
+    @include recortar-lineas(2);
+  }
+
+  &__autores {
+    font-size: 0.9rem;
+    @include recortar-lineas(1);
+  }
+}
