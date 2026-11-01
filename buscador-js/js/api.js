@@ -52,3 +52,16 @@ export async function enviarPropuesta(propuesta) {
 
   return respuesta.json();
 }
+
+// Lecturas de ejemplo con las que arranca la lista, guardadas junto a la aplicación.
+const URL_LECTURAS_INICIALES = 'data/lecturas-iniciales.json';
+
+export async function cargarLecturasIniciales() {
+  const respuesta = await fetch(URL_LECTURAS_INICIALES);
+
+  if (!respuesta.ok) {
+    throw new Error(`No se encontraron las lecturas iniciales (código ${respuesta.status}).`);
+  }
+
+  return respuesta.json();
+}

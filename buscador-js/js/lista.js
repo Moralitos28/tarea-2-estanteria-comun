@@ -3,7 +3,8 @@
 import {
   agregarLectura, avanzarEstado, quitarLectura, buscarLectura, obtenerLecturas, siguienteEstado,
 } from './lecturas.js';
-import { crearFilaLectura, actualizarFilaLectura } from './render.js';
+import { crearFilaLectura, actualizarFilaLectura, crearAlerta } from './render.js';
+import { cargarLecturasIniciales } from './api.js';
 import { abrirDetalle } from './detalle.js';
 import { animarEntrada, animarCambio, animarSalida } from './animaciones.js';
 
@@ -26,8 +27,8 @@ function avisarCambio(id, enLista) {
   document.dispatchEvent(new CustomEvent('lecturas:cambio', { detail: { id, enLista } }));
 }
 
-function agregar(libro) {
-  const lectura = agregarLectura(libro);
+function agregar(libro, estado) {
+  const lectura = agregarLectura(libro, estado);
   if (!lectura) return;
 
   const fila = crearFilaLectura(lectura, siguienteEstado(lectura.estado));
@@ -56,6 +57,17 @@ async function quitar(id) {
   // se ocultara antes, la transición se cancelaría sin llegar a verse.
   await animarSalida(fila, 'fila-lectura--saliendo');
   actualizarMensajeVacio();
+  cargarIniciales();
+}
+
+// Carga las lecturas de ejemplo. Si fallan, la lista arranca vacía y se avisa sin romper la página.
+async function cargarIniciales() {
+  try {
+    const iniciales = await cargarLecturasIniciales();
+    iniciales.forEach(({ libro, estado }) => agregar(libro, estado));
+  } catch (error) {
+    tabla.before(crearAlerta('warning', 'No se cargaron las lecturas de ejemplo.', error.message));
+  }
 }
 
 export function iniciarLista() {
@@ -84,4 +96,5 @@ export function iniciarLista() {
   });
 
   actualizarMensajeVacio();
+  cargarIniciales();
 }

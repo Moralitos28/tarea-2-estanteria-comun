@@ -1,0 +1,54 @@
+[
+  {
+    "estado": "Leído",
+    "libro": {
+      "id": "/works/OL274505W",
+      "titulo": "Cien años de soledad",
+      "autores": ["Gabriel García Márquez"],
+      "anio": 1967,
+      "portadaId": 12627383,
+      "paginas": 432,
+      "ediciones": 208,
+      "temas": ["Ficción", "Realismo mágico", "Macondo (lugar imaginario)", "Novela"]
+    }
+  },
+  {
+    "estado": "Leyendo",
+    "libro": {
+      "id": "/works/OL14860424W",
+      "titulo": "Rayuela",
+      "autores": ["Julio Cortázar"],
+      "anio": 1963,
+      "portadaId": 1047466,
+      "paginas": 633,
+      "ediciones": 129,
+      "temas": ["Ficción argentina", "Novela experimental", "Vida social y costumbres"]
+    }
+  },
+  {
+    "estado": "Pendiente",
+    "libro": {
+      "id": "/works/OL1731119W",
+      "titulo": "Pedro Páramo",
+      "autores": ["Juan Rulfo"],
+      "anio": 1955,
+      "portadaId": 5419076,
+      "paginas": 131,
+      "ediciones": 135,
+      "temas": ["Ficción", "Literatura mexicana", "Jalisco (México)"]
+    }
+  },
+  {
+    "estado": "Pendiente",
+    "libro": {
+      "id": "/works/OL1905255W",
+      "titulo": "La casa de los espíritus",
+      "autores": ["Isabel Allende"],
+      "anio": 1982,
+      "portadaId": 3205226,
+      "paginas": 453,
+      "ediciones": 116,
+      "temas": ["Literatura chilena", "Literatura hispanoamericana", "Autoras chilenas"]
+    }
+  }
+]

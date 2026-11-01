@@ -16,15 +16,16 @@ export function estaEnLecturas(id) {
   return buscarLectura(id) !== undefined;
 }
 
-// Agrega el libro con el primer estado. Devuelve null si ya estaba en la lista.
-export function agregarLectura(libro) {
-  if (estaEnLecturas(libro.id)) return null;
+// Agrega el libro con el estado indicado (por defecto, el primero).
+// Devuelve null si ya estaba en la lista o si el estado no existe.
+export function agregarLectura(libro, estado = ESTADOS[0]) {
+  if (estaEnLecturas(libro.id) || !ESTADOS.includes(estado)) return null;
 
   const lectura = {
     id: libro.id,
     titulo: libro.titulo,
     autores: libro.autores,
-    estado: ESTADOS[0],
+    estado,
     libro,
   };
 
