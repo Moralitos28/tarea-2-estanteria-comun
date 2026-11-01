@@ -1,0 +1,23 @@
+# Seguimiento interno (no se versiona)
+internaltracking/
+
+# Configuración local de Claude Code
+.claude/
+
+# Dependencias
+node_modules/
+
+# Builds
+dist/
+buscador-js/css/
+
+# Entorno y logs
+.env
+.env.*
+*.log
+npm-debug.log*
+
+# Sistema / editor
+.DS_Store
+.vscode/
+.idea/
