@@ -5,13 +5,15 @@ import {
 } from './lecturas.js';
 import { crearFilaLectura, actualizarFilaLectura } from './render.js';
 import { abrirDetalle } from './detalle.js';
+import { animarEntrada, animarCambio, animarSalida } from './animaciones.js';
 
 const tabla = document.querySelector('#tabla-lecturas');
 const cuerpo = document.querySelector('#lista-lecturas');
 const mensajeVacio = document.querySelector('#lecturas-vacia');
 
+// Ignora filas que están saliendo, por si el libro se vuelve a agregar antes de que terminen.
 function buscarFila(id) {
-  return cuerpo.querySelector(`tr[data-id="${CSS.escape(id)}"]`);
+  return cuerpo.querySelector(`tr[data-id="${CSS.escape(id)}"]:not(.fila-lectura--saliendo)`);
 }
 
 function actualizarMensajeVacio() {
@@ -28,7 +30,9 @@ function agregar(libro) {
   const lectura = agregarLectura(libro);
   if (!lectura) return;
 
-  cuerpo.append(crearFilaLectura(lectura, siguienteEstado(lectura.estado)));
+  const fila = crearFilaLectura(lectura, siguienteEstado(lectura.estado));
+  cuerpo.append(fila);
+  animarEntrada(fila, 'fila-lectura--entrando');
   actualizarMensajeVacio();
   avisarCambio(lectura.id, true);
 }
@@ -39,15 +43,19 @@ function cambiarEstado(id) {
   if (!lectura || !fila) return;
 
   actualizarFilaLectura(fila, lectura, siguienteEstado(lectura.estado));
+  animarCambio(fila.querySelector('.fila-lectura__estado'), 'estado-cambiado');
 }
 
-function quitar(id) {
+async function quitar(id) {
   const fila = buscarFila(id);
   if (!quitarLectura(id) || !fila) return;
 
-  fila.remove();
-  actualizarMensajeVacio();
   avisarCambio(id, false);
+
+  // El mensaje de lista vacía se actualiza después de la salida; si la tabla
+  // se ocultara antes, la transición se cancelaría sin llegar a verse.
+  await animarSalida(fila, 'fila-lectura--saliendo');
+  actualizarMensajeVacio();
 }
 
 export function iniciarLista() {

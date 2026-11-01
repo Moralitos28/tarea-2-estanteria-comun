@@ -54,3 +54,51 @@
     cursor: pointer;
   }
 }
+
+// Animaciones de la lista. JavaScript solo agrega o quita estas clases.
+.fila-lectura {
+  transition: opacity $duracion-transicion ease, transform $duracion-transicion ease;
+
+  // Estado inicial al agregar: se quita la clase y la fila transiciona a su posición.
+  &--entrando {
+    opacity: 0;
+    transform: translateY(rem(-12px));
+  }
+
+  // Al quitar: la fila se desvanece y se retira del DOM cuando termina la transición.
+  &--saliendo {
+    opacity: 0;
+    transform: translateX(rem(24px));
+  }
+
+  &__estado {
+    display: inline-block;
+
+    &.estado-cambiado {
+      animation: pulso-estado $duracion-transicion * 2 ease;
+    }
+  }
+}
+
+@keyframes pulso-estado {
+  0% {
+    transform: scale(1);
+  }
+
+  40% {
+    transform: scale(1.25);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+// Quien prefiere menos movimiento ve los cambios sin animación.
+@media (prefers-reduced-motion: reduce) {
+  .fila-lectura,
+  .fila-lectura__estado.estado-cambiado {
+    transition: none;
+    animation: none;
+  }
+}
