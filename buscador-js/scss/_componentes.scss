@@ -47,3 +47,10 @@
     @include recortar-lineas(1);
   }
 }
+
+// Lista de lecturas: la fila completa abre el detalle.
+.tabla-lecturas {
+  tbody tr {
+    cursor: pointer;
+  }
+}

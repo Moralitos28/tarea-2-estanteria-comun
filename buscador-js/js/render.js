@@ -42,7 +42,22 @@ function crearPortada(libro, clase) {
   return imagen;
 }
 
-export function crearTarjetaLibro(libro) {
+function crearBotonAgregar(enLista) {
+  const boton = crearElemento('button', {
+    clase: 'btn btn-primary btn-sm',
+    atributos: { type: 'button', 'data-accion': 'agregar' },
+  });
+  marcarBotonAgregar(boton, enLista);
+  return boton;
+}
+
+// Actualiza el botón de agregar según si el libro ya está en la lista.
+export function marcarBotonAgregar(boton, enLista) {
+  boton.disabled = enLista;
+  boton.textContent = enLista ? 'En mis lecturas' : 'Agregar a mis lecturas';
+}
+
+export function crearTarjetaLibro(libro, enLista = false) {
   const cuerpo = crearElemento('div', { clase: 'card-body d-flex flex-column' }, [
     crearElemento('h3', { clase: 'card-title tarjeta-libro__titulo', texto: libro.titulo }),
     crearElemento('p', { clase: 'card-text text-body-secondary tarjeta-libro__autores mb-1', texto: textoAutores(libro.autores) }),
@@ -53,6 +68,7 @@ export function crearTarjetaLibro(libro) {
         texto: 'Ver detalle',
         atributos: { type: 'button', 'data-accion': 'detalle' },
       }),
+      crearBotonAgregar(enLista),
     ]),
   ]);
 
@@ -62,8 +78,8 @@ export function crearTarjetaLibro(libro) {
   }, [crearPortada(libro, 'card-img-top tarjeta-libro__portada'), cuerpo]);
 }
 
-export function renderizarResultados(contenedor, libros) {
-  contenedor.replaceChildren(...libros.map(crearTarjetaLibro));
+export function renderizarResultados(contenedor, libros, estaEnLista) {
+  contenedor.replaceChildren(...libros.map((libro) => crearTarjetaLibro(libro, estaEnLista(libro.id))));
 }
 
 // Muestra el estado de la búsqueda: cargando, error o vacío. Sin tipo, limpia el estado.
@@ -112,4 +128,44 @@ export function crearDetalleLibro(libro) {
     crearElemento('div', { clase: 'col-5 col-md-4' }, [crearPortada(libro, 'img-fluid rounded shadow-sm')]),
     crearElemento('div', { clase: 'col-7 col-md-8' }, [datos, temas]),
   ]);
+}
+
+// Filas de la lista de lecturas
+
+const CLASES_ESTADO = {
+  Pendiente: 'text-bg-secondary',
+  Leyendo: 'text-bg-warning',
+  'Leído': 'text-bg-success',
+};
+
+export function crearFilaLectura(lectura, textoSiguiente) {
+  const fila = crearElemento('tr', { clase: 'fila-lectura', atributos: { 'data-id': lectura.id } }, [
+    crearElemento('td', { clase: 'fw-semibold', texto: lectura.titulo }),
+    crearElemento('td', { clase: 'd-none d-sm-table-cell text-body-secondary', texto: textoAutores(lectura.autores) }),
+    crearElemento('td', {}, [crearElemento('span', { clase: 'badge fila-lectura__estado' })]),
+    crearElemento('td', { clase: 'text-end text-nowrap' }, [
+      crearElemento('button', {
+        clase: 'btn btn-outline-primary btn-sm me-1',
+        atributos: { type: 'button', 'data-accion': 'cambiar-estado' },
+      }),
+      crearElemento('button', {
+        clase: 'btn btn-outline-danger btn-sm',
+        texto: 'Quitar',
+        atributos: { type: 'button', 'data-accion': 'quitar', 'aria-label': `Quitar ${lectura.titulo}` },
+      }),
+    ]),
+  ]);
+
+  actualizarFilaLectura(fila, lectura, textoSiguiente);
+  return fila;
+}
+
+// Actualiza solo la insignia de estado y el texto del botón, sin reconstruir la fila.
+export function actualizarFilaLectura(fila, lectura, textoSiguiente) {
+  const insignia = fila.querySelector('.fila-lectura__estado');
+  insignia.className = `badge fila-lectura__estado ${CLASES_ESTADO[lectura.estado] ?? 'text-bg-light'}`;
+  insignia.textContent = lectura.estado;
+
+  const boton = fila.querySelector('[data-accion="cambiar-estado"]');
+  boton.textContent = `Marcar ${textoSiguiente}`;
 }

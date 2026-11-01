@@ -1,24 +1,18 @@
-// Controlador de la búsqueda: formulario, estados y modal de detalle.
+// Controlador de la búsqueda: formulario, estados y tarjetas de resultados.
 
 import { buscarLibros } from './api.js';
-import { renderizarResultados, mostrarEstado, crearDetalleLibro } from './render.js';
+import { estaEnLecturas } from './lecturas.js';
+import { renderizarResultados, mostrarEstado, marcarBotonAgregar } from './render.js';
+import { abrirDetalle } from './detalle.js';
 
 const formulario = document.querySelector('#form-busqueda');
 const campoTexto = document.querySelector('#texto-busqueda');
 const estado = document.querySelector('#estado-busqueda');
 const resultados = document.querySelector('#resultados');
 
-const modal = document.querySelector('#modal-detalle');
-const modalTitulo = document.querySelector('#modal-detalle-titulo');
-const modalCuerpo = document.querySelector('#modal-detalle-cuerpo');
-
 // Libros de la última búsqueda, indexados por id para recuperarlos desde el DOM.
 const librosPorId = new Map();
 let controladorActual = null;
-
-export function obtenerLibro(id) {
-  return librosPorId.get(id);
-}
 
 async function ejecutarBusqueda(texto) {
   // Cancela una búsqueda anterior que siga en curso.
@@ -40,18 +34,11 @@ async function ejecutarBusqueda(texto) {
     }
 
     mostrarEstado(estado, null);
-    renderizarResultados(resultados, libros);
+    renderizarResultados(resultados, libros, estaEnLecturas);
   } catch (error) {
     if (error.name === 'AbortError') return;
     mostrarEstado(estado, 'error', `No se pudo completar la búsqueda. ${error.message}`);
   }
-}
-
-function abrirDetalle(libro) {
-  modalTitulo.textContent = libro.titulo;
-  modalCuerpo.replaceChildren(crearDetalleLibro(libro));
-  modal.dataset.id = libro.id;
-  bootstrap.Modal.getOrCreateInstance(modal).show();
 }
 
 export function iniciarBusqueda() {
@@ -67,9 +54,19 @@ export function iniciarBusqueda() {
     const boton = evento.target.closest('[data-accion]');
     if (!boton || !resultados.contains(boton)) return;
 
-    const libro = obtenerLibro(boton.closest('[data-id]').dataset.id);
+    const libro = librosPorId.get(boton.closest('[data-id]').dataset.id);
     if (!libro) return;
 
     if (boton.dataset.accion === 'detalle') abrirDetalle(libro);
+    if (boton.dataset.accion === 'agregar') {
+      document.dispatchEvent(new CustomEvent('libro:agregar', { detail: libro }));
+    }
+  });
+
+  // Mantiene sincronizado el botón de la tarjeta cuando cambia la lista.
+  document.addEventListener('lecturas:cambio', (evento) => {
+    const tarjeta = resultados.querySelector(`[data-id="${CSS.escape(evento.detail.id)}"]`);
+    const boton = tarjeta?.querySelector('[data-accion="agregar"]');
+    if (boton) marcarBotonAgregar(boton, evento.detail.enLista);
   });
 }
