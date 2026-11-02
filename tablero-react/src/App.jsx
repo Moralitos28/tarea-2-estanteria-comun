@@ -5,6 +5,7 @@ import Encabezado from './components/layout/Encabezado.jsx';
 import Panel from './components/layout/Panel.jsx';
 import ListaLibros from './components/libros/ListaLibros.jsx';
 import SinResultados from './components/libros/SinResultados.jsx';
+import FormularioLibro from './components/libros/FormularioLibro.jsx';
 import Filtros, { TODOS } from './components/tablero/Filtros.jsx';
 import Resumen from './components/tablero/Resumen.jsx';
 
@@ -28,6 +29,11 @@ export default function App() {
     setLibros((anteriores) => anteriores.filter((libro) => libro.id !== id));
   }
 
+  // El libro nuevo se agrega en un arreglo nuevo, con un id único para usarlo como key.
+  function agregarLibro(datos) {
+    setLibros((anteriores) => [...anteriores, { ...datos, id: crypto.randomUUID() }]);
+  }
+
   // Valores derivados: se calculan en cada render a partir del estado, no se guardan aparte.
   const librosFiltrados = libros.filter((libro) => (
     (filtros.estado === TODOS || libro.estado === filtros.estado)
@@ -49,6 +55,10 @@ export default function App() {
 
         <Panel titulo="Filtrar libros">
           <Filtros filtros={filtros} miembros={MIEMBROS} onCambiar={setFiltros} />
+        </Panel>
+
+        <Panel titulo="Agregar un libro">
+          <FormularioLibro libros={libros} miembros={MIEMBROS} onAgregar={agregarLibro} />
         </Panel>
 
         <Panel titulo={`Libros del club (${librosFiltrados.length} de ${libros.length})`}>
