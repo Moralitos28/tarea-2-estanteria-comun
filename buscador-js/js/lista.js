@@ -57,7 +57,6 @@ async function quitar(id) {
   // se ocultara antes, la transición se cancelaría sin llegar a verse.
   await animarSalida(fila, 'fila-lectura--saliendo');
   actualizarMensajeVacio();
-  cargarIniciales();
 }
 
 // Carga las lecturas de ejemplo. Si fallan, la lista arranca vacía y se avisa sin romper la página.

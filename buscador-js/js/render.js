@@ -143,16 +143,19 @@ export function crearFilaLectura(lectura, textoSiguiente) {
     crearElemento('td', { clase: 'fw-semibold', texto: lectura.titulo }),
     crearElemento('td', { clase: 'd-none d-sm-table-cell text-body-secondary', texto: textoAutores(lectura.autores) }),
     crearElemento('td', {}, [crearElemento('span', { clase: 'badge fila-lectura__estado' })]),
-    crearElemento('td', { clase: 'text-end text-nowrap' }, [
-      crearElemento('button', {
-        clase: 'btn btn-outline-primary btn-sm me-1',
-        atributos: { type: 'button', 'data-accion': 'cambiar-estado' },
-      }),
-      crearElemento('button', {
-        clase: 'btn btn-outline-danger btn-sm',
-        texto: 'Quitar',
-        atributos: { type: 'button', 'data-accion': 'quitar', 'aria-label': `Quitar ${lectura.titulo}` },
-      }),
+    // En pantallas pequeñas los botones se apilan para que la fila no se desborde.
+    crearElemento('td', {}, [
+      crearElemento('div', { clase: 'd-flex flex-column flex-sm-row justify-content-end gap-1' }, [
+        crearElemento('button', {
+          clase: 'btn btn-outline-primary btn-sm text-nowrap',
+          atributos: { type: 'button', 'data-accion': 'cambiar-estado' },
+        }),
+        crearElemento('button', {
+          clase: 'btn btn-outline-danger btn-sm',
+          texto: 'Quitar',
+          atributos: { type: 'button', 'data-accion': 'quitar', 'aria-label': `Quitar ${lectura.titulo}` },
+        }),
+      ]),
     ]),
   ]);
 
