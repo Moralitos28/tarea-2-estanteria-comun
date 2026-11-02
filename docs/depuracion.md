@@ -18,31 +18,32 @@ La palabra `undefined` en el mensaje indicaba que algún valor se estaba leyendo
 
 ### Localización con puntos de interrupción
 
-1. En **Sources**, se abrió `js/formulario.js` y se colocó un punto de interrupción en la primera línea de `reglaLongitudMinima()`, la función que arma el mensaje "debe tener al menos … caracteres".
+1. En **Sources**, se abrió `js/formulario.js` y se colocó un punto de interrupción en la línea 57, la primera de `reglaLongitudMinima()`: la función que arma el mensaje "debe tener al menos … caracteres".
 2. Para no detenerse en cada campo, se convirtió en **punto de interrupción condicional** con la condición `campo.name === 'genero'`.
-3. Al enviar el formulario, la ejecución se detuvo con `campo` apuntando al `<select id="genero">`. En el panel **Scope** se observó:
-   - `campo.tagName`: `"SELECT"`
+3. Al enviar el formulario, la ejecución se detuvo en `reglaLongitudMinima()`. El **Call Stack** muestra el recorrido desde el envío: `enviar` → `validarFormulario` → `validarCampo` → `reglaLongitudMinima`. En línea, DevTools indica `campo = select#genero.form-select`.
+4. Con **Step over** se ejecutó la desestructuración y la ejecución quedó en la línea 60, la condición de salida. En el panel **Scope** se observa:
+   - `campo`: `select#genero.form-select`
    - `minLength`: `undefined`
    - `value`: `"Fantasía"`
 
-![Ejecución detenida en reglaLongitudMinima con minLength undefined](capturas/02-breakpoint-minlength.png)
+![Ejecución detenida en la condición de salida, con minLength undefined en Scope](capturas/02-breakpoint-minlength.png)
 
-4. Con **Step over** se avanzó sobre la condición de salida, que en ese momento era:
+5. Con la ejecución detenida, en la **Console** se evaluó cada parte de la condición:
 
    ```js
    if (minLength <= 0 || value === '' || value.length >= minLength) return '';
    ```
 
-   En la consola, con la ejecución detenida, se evaluó cada parte:
+   | Expresión | Resultado |
+   |---|---|
+   | `minLength` | `undefined` |
+   | `minLength <= 0` | `false` |
+   | `value.length >= minLength` | `false` |
+   | `!(minLength > 0)` | `true` |
 
-   ```js
-   minLength <= 0            // false
-   value.length >= minLength // false
-   ```
+   Las dos comparaciones con `undefined` dan `false`, así que la función no salía y continuaba hasta devolver el mensaje de error. La última expresión es la que se usó para corregirlo.
 
-   Las dos comparaciones con `undefined` dan `false`, así que la función no salía y continuaba hasta devolver el mensaje de error.
-
-![Evaluación de las comparaciones en la consola](capturas/03-consola-comparaciones.png)
+![Evaluación de las comparaciones en la consola de DevTools](capturas/03-consola-comparaciones.png)
 
 ### Causa
 
@@ -66,28 +67,34 @@ if (!(minLength > 0) || value === '' || value.length >= minLength) return '';
 
 ## 2. Análisis del panel de red
 
-Medición en **Network**, con **Disable cache** activado y recargando la página completa (búsqueda sin ejecutar).
+Medición en **Network**, con **Disable cache** activado y recargando la página completa con `npm start`, antes de ejecutar ninguna búsqueda.
 
 ![Panel de red al cargar la página](capturas/04-red-carga.png)
 
-| Recurso | Tipo | Tamaño |
+| Recurso | Tipo | Transferido |
 |---|---|---|
-| `index.html` | document | _completar_ |
-| `css/main.css` | stylesheet | _completar_ |
-| `bootstrap.min.js` | script | _completar_ |
-| `js/*.js` (9 módulos) | script | _completar_ |
-| Fuentes Inter y Fraunces | font | _completar_ |
-| `data/lecturas-iniciales.json` | fetch | _completar_ |
-| Portadas de las lecturas iniciales | jpeg | _completar_ |
-| **Total** | **_n_ peticiones** | **_completar_ transferidos / _completar_ recursos** |
+| `index.html` | document | 2,6 kB |
+| `css/main.css` | stylesheet | 27,4 kB |
+| `bootstrap.min.js` | script | 17,6 kB |
+| `js/*.js` (9 módulos) | script | 15,1 kB |
+| Fuentes Inter y Fraunces | font | 85,5 kB |
+| `data/lecturas-iniciales.json` | fetch | 0,9 kB |
+| `favicon.svg` | svg | 0,5 kB |
+| **Total** | **18 peticiones** | **150 kB transferidos / 364 kB recursos** |
+
+El servidor de `npm start` comprime las respuestas, por eso lo transferido (150 kB) es mucho menor que el tamaño real de los recursos (364 kB). De las 18 peticiones, 2 son iconos SVG que Bootstrap incrusta en el CSS como `data:` y se resuelven desde memoria, sin ir a la red. La página termina de cargar en unos 50 ms en local.
+
+Las portadas de las lecturas iniciales vienen de `covers.openlibrary.org` y se piden al dibujar la tabla (unos 40 kB para las 4).
 
 Observaciones:
 
-- Los módulos ES se piden en cascada: el navegador descarga `main.js`, lee sus `import` y luego pide los demás. Son archivos pequeños y el servidor local responde rápido, así que el efecto es menor; en producción convendría empaquetarlos.
-- Las portadas vienen de `covers.openlibrary.org` y son el recurso más pesado después del CSS. Se cargan con `loading="lazy"`, así que las de los resultados no visibles solo se piden al desplazarse.
-- Una búsqueda agrega una petición a `openlibrary.org/search.json` más una por cada portada visible.
+- **El CSS es el recurso propio más pesado** (172,7 kB sin comprimir, casi la mitad de los recursos), por eso la optimización de la sección 3 se concentró en él. Las fuentes pesan más transferidas porque `woff2` ya viene comprimido y no se reduce más.
+- **Los módulos ES se piden en cascada.** El navegador descarga `main.js`, lee sus `import` y recién entonces pide `busqueda.js`, `lista.js`, etc. Son 9 peticiones pequeñas; con un servidor local el efecto es mínimo, pero en producción convendría empaquetarlos en un solo archivo.
+- **Las fuentes llegan después del CSS**, porque el navegador solo las descubre al leer los `@font-face`. `font-display: swap` evita que el texto quede invisible mientras tanto.
 
-![Panel de red después de una búsqueda](capturas/05-red-busqueda.png)
+### Búsqueda
+
+Una búsqueda agrega **1 petición** a `openlibrary.org/search.json` (9,5 kB para "borges") y una petición por cada portada que entra en pantalla. Las portadas usan `loading="lazy"`: de los 12 resultados, solo se descargaron las que eran visibles; las demás se piden al desplazarse.
 
 ## 3. Optimización aplicada
 
@@ -101,16 +108,14 @@ Se verificó que todas las clases usadas en el HTML y en el JavaScript siguen pr
 
 ### Medición
 
-Tamaños de los archivos servidos, sin compresión y con gzip:
+La versión anterior (commit `3010184`) se compiló y se sirvió por separado para medirla en el navegador con las mismas condiciones.
 
 | Recurso | Antes | Después | Antes (gzip) | Después (gzip) |
 |---|---|---|---|---|
-| CSS (`main.css`) | 273,4 KB | 171,8 KB (−37 %) | 33,3 KB | 24,5 KB (−26 %) |
-| JS de Bootstrap | 78,6 KB | 59,1 KB (−25 %) | 23,2 KB | 16,1 KB (−30 %) |
-| **Total** | **352,0 KB** | **230,9 KB (−34 %)** | **56,5 KB** | **40,7 KB (−28 %)** |
+| CSS (`main.css`) | 273,4 kB | 172,7 kB (−37 %) | 33,3 kB | 24,9 kB (−25 %) |
+| JS de Bootstrap | 78,6 kB | 59,1 kB (−25 %) | 23,2 kB | 16,1 kB (−30 %) |
+| **Total de ambos** | **352,0 kB** | **231,8 kB (−34 %)** | **56,5 kB** | **41,1 kB (−27 %)** |
 
-![Panel de red antes de la optimización](capturas/06-red-antes.png)
+La columna gzip indica lo que pesarían servidos con compresión, como haría un servidor de producción.
 
-![Panel de red después de la optimización](capturas/07-red-despues.png)
-
-La medición compara los mismos dos recursos. Las fuentes tipográficas se agregaron después de esta optimización y no forman parte de la comparación.
+**Página completa (recursos sin comprimir):** antes, 13 peticiones y 391,8 kB; después, 364 kB. Las peticiones adicionales son las fuentes Inter y Fraunces (82,9 kB) y el favicon, incorporados después de la optimización. Sin las fuentes, la página optimizada pesa unos 281 kB, un 28 % menos que la versión anterior.
