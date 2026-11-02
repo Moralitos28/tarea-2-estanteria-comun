@@ -1,3 +1,9 @@
+// El nombre del club usa la tipografía de los títulos.
+.navbar-brand {
+  font-family: $headings-font-family;
+  letter-spacing: 0.01em;
+}
+
 // Grilla de resultados: componente propio con CSS Grid y variables CSS.
 // Mobile-first: una columna y se agregan columnas al crecer la pantalla.
 .grilla-libros {
