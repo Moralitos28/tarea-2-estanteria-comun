@@ -1,0 +1,9 @@
+// Estilos del tablero. Reutiliza los parciales de Sass de la Parte A
+// (función, variables, Bootstrap personalizado, mixins y componentes).
+@import "../../../buscador-js/scss/funciones";
+@import "../../../buscador-js/scss/variables";
+@import "../../../buscador-js/scss/bootstrap";
+@import "../../../buscador-js/scss/mixins";
+@import "../../../buscador-js/scss/componentes";
+
+@import "tablero";

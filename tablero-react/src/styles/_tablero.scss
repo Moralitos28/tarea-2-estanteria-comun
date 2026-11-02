@@ -1,0 +1,35 @@
+// Componentes propios del tablero.
+
+// Tarjeta de un libro del club: el borde izquierdo indica su estado.
+.libro-club {
+  --color-estado: #{$secondary};
+
+  border-left: rem(5px) solid var(--color-estado);
+
+  &--leyendo {
+    --color-estado: #{$warning};
+  }
+
+  &--leido {
+    --color-estado: #{$success};
+  }
+
+  &__titulo {
+    font-size: 1.1rem;
+    @include recortar-lineas(2);
+  }
+}
+
+// Resumen: una cifra por estado, en fila desde tabletas.
+.resumen {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(rem(110px), 1fr));
+  gap: rem(12px);
+
+  &__cifra {
+    font-family: $headings-font-family;
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+}
